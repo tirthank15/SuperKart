@@ -1,0 +1,43 @@
+# Render Blueprint for SuperKart (Flask model API + Streamlit UI)
+# Place this file at the ROOT of the repo (next to README.md).
+
+services:
+  # ---------- Backend: Flask + gunicorn serving the joblib model ----------
+  - type: web
+    name: superkart-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # Override the Dockerfile CMD: 2 workers fits in the free plan's 512 MB RAM
+    # (4 workers each loading pandas + xgboost + the model can run out of memory).
+    dockerCommand: gunicorn -w 2 -b 0.0.0.0:7860 --timeout 120 app:superkart_api
+    healthCheckPath: /
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: PORT          # tells Render which port the container listens on
+        value: "7860"
+
+  # ---------- Frontend: Streamlit UI that calls the backend ----------
+  - type: web
+    name: superkart-frontend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - frontend/**
+    envVars:
+      - key: PORT
+        value: "8501"
+      # Public URL of the backend, e.g. https://superkart-backend.onrender.com
+      # Render will ask you for this value when you create the Blueprint.
+      - key: BACKEND_URL
+        sync: false
