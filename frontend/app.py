@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 
 # Base URL of the Flask backend
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://backend:7860").rstrip("/")
